@@ -1,6 +1,6 @@
 # Note-Taking API
 
-A REST API for a note-taking application built with Node.js, Express, TypeScript, and MongoDB.
+A RESTful API for a note-taking application built with Node.js, Express, TypeScript, and MongoDB.
 
 ---
 
