@@ -1,4 +1,4 @@
-# Notes API
+# Note-Taking API
 
 A REST API for a note-taking application built with Node.js, Express, TypeScript, and MongoDB.
 
@@ -88,13 +88,13 @@ Server running on port 3000
 
 ### Notes
 
-| Method | Endpoint         | Description                         |
-| ------ | ---------------- | ----------------------------------- |
-| GET    | `/api/notes`     | Get all notes (supports pagination) |
-| GET    | `/api/notes/:id` | Get a specific note by ID           |
-| POST   | `/api/notes`     | Create a new note                   |
-| PUT    | `/api/notes/:id` | Update an existing note             |
-| DELETE | `/api/notes/:id` | Delete a note                       |
+| Method | Endpoint         | Description               |
+| ------ | ---------------- | ------------------------- |
+| GET    | `/api/notes`     | Get all notes             |
+| GET    | `/api/notes/:id` | Get a specific note by ID |
+| POST   | `/api/notes`     | Create a new note         |
+| PUT    | `/api/notes/:id` | Update an existing note   |
+| DELETE | `/api/notes/:id` | Delete a note             |
 
 ---
 
