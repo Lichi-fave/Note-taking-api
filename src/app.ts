@@ -8,9 +8,17 @@ import {
   createNote,
   deleteNote,
   updateNote,
-} from "./controller";
+  getNotesByCategory,
+} from "./controller/noteController";
+import {
+  getAllCategories,
+  createCategory,
+} from "./controller/categoryController";
+import { validateNoteData, validateCategoryData } from "./middleware/validate";
+import { logger } from "./middleware/logger";
 import { HTTP_STATUS } from "./constants";
 import { AppError } from "./errors";
+import mongoose from "mongoose";
 
 dotenv.config(); // reads .env file so process.env can access the variables
 
@@ -21,13 +29,19 @@ const PORT = process.env.PORT || 3000; // tells express "expect JSON data from r
 // Middleware to parse JSON bodies from incoming requests
 app.use(express.json());
 app.use(cors()); // enables CORS for all routes, allowing requests from any origin
+app.use(logger); // applies the logger middleware to all incoming requests
+
+// routes for handling categories
+app.get("/api/categories", getAllCategories);
+app.post("/api/categories", validateCategoryData, createCategory);
 
 // routes for handling notes
 app.get("/api/notes", getAllNotes);
 app.get("/api/notes/:id", getNoteById);
-app.post("/api/notes", createNote);
-app.put("/api/notes/:id", updateNote);
+app.post("/api/notes", validateNoteData, createNote);
 app.delete("/api/notes/:id", deleteNote);
+app.get("/api/notes/category/:categoryId", getNotesByCategory); // new route to get notes by category
+app.put("/api/notes/:id", validateNoteData, updateNote); // applies the validateNoteData middleware to the PUT /api/notes/:id route
 
 // Global error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

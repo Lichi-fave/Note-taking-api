@@ -9,8 +9,6 @@ const VALID_TITLE = /^[a-zA-Z0-9\s.,!?'-]{3,100}$/; // allows letters, numbers, 
 
 const VALID_CONTENT = /^[\s\S]{5,1000}$/; // allows any characters including newlines, with length between 5 and 1000
 
-const VALID_CATEGORY = /^[0-9a-fA-F]{24}$/; // MongoDB ObjectId format
-
 // GET /api/notes - list all notes
 export const getAllNotes = async (
   req: Request,
@@ -55,20 +53,6 @@ export const createNote = async (
 ): Promise<void> => {
   try {
     const { title, content, category } = req.body; // extracts title, content, and category from the request body
-
-    if (!title || !content || !category) {
-      throw new AppError(
-        "Title, content, and category are required",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-    if (!VALID_TITLE.test(title)) {
-      throw new AppError(
-        "Title must be 3-100 characters and contain only letters, numbers and basic punctuation",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-
     const note = await Note.create({ title, content, category }); // creates a new note in the database
     res.status(HTTP_STATUS.CREATED).json(note); // sends the created note as a JSON response with HTTP 201 status
   } catch (error) {
@@ -111,28 +95,6 @@ export const updateNote = async (
 ): Promise<void> => {
   try {
     const { title, content, category } = req.body; // extracts title, content, and category from the request body
-    if (!title || !content || !category) {
-      throw new AppError(
-        "Title, content, and category are required",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-    if (!VALID_TITLE.test(title)) {
-      throw new AppError(
-        "Title must be 3-100 characters and contain only letters, numbers and basic punctuation",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-    if (!VALID_CONTENT.test(content)) {
-      throw new AppError(
-        "Content must be 5-1000 characters long",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-    if (!VALID_CATEGORY.test(category)) {
-      throw new AppError("Invalid category ID format", HTTP_STATUS.BAD_REQUEST);
-    }
-
     const note = await Note.findByIdAndUpdate(
       req.params.id,
       { title, content, category },
