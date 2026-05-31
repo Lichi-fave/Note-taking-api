@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Category from "../model/CategoryModel";
+import Category from "../model/categoryModel";
 import { HTTP_STATUS } from "../constants";
 import { AppError } from "../errors";
 

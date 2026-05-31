@@ -129,19 +129,26 @@ Server running on port 3000
 ```
 note-taking-api/
 ├── src/
-│   ├── app.ts            # Express server setup and routes
-│   ├── constants.ts      # HTTP status codes
-│   ├── controller.ts     # Endpoint logic
-│   ├── database.ts       # MongoDB connection
-│   ├── errors.ts         # Custom AppError class
-│   └── NoteModels.ts     # INote interface and Mongoose schema
-├── .env                  # Secret config (never pushed to GitHub)
+│   ├──── controller/
+│   │  ├──── categoryController.ts
+│   │  └──── noteController.ts
+│   ├──── middleware/
+│   │  ├──── logger.ts
+│   │  └──── validate.ts
+│   ├──── model/
+│   │  ├──── categoryModel.ts
+│   │  └──── noteModel.ts
+│   ├──── app.ts
+│   ├──── constants.ts
+│   ├──── database.ts
+│   ├──── errors.ts
+├── .env
 ├── .env.example
 ├── .gitignore            # Files excluded from GitHub
 ├── package-lock.json
 ├── package.json
-├── tsconfig.json
-└── README.md
+├── README.md
+└── tsconfig.json
 ```
 
 ---

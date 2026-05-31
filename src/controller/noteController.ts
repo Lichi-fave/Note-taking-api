@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Note from "../model/NoteModels";
+import Note from "../model/noteModel";
 import { HTTP_STATUS } from "../constants";
 import { AppError } from "../errors";
 
@@ -16,7 +16,7 @@ export const getAllNotes = async (
 ): Promise<void> => {
   try {
     const notes = await Note.find(); // retrieves all notes from the database
-    res.status(HTTP_STATUS.OK).json(notes); // sends the notes as a JSON response with HTTP 200 status
+    res.status(HTTP_STATUS.OK).json(notes);
   } catch (error) {
     res
       .status(HTTP_STATUS.SERVER_ERROR)
@@ -103,7 +103,9 @@ export const updateNote = async (
     if (!note) {
       throw new AppError("Note not found", HTTP_STATUS.NOT_FOUND);
     }
-    res.status(HTTP_STATUS.OK).json(note);
+    res
+      .status(HTTP_STATUS.OK)
+      .json({ message: "Note updated successfully", data: note });
   } catch (error) {
     if (error instanceof AppError) {
       res.status(error.statusCode).json({ message: error.message });
