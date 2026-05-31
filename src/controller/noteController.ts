@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import Note from "./NoteModels";
-import { HTTP_STATUS } from "./constants";
-import { AppError } from "./errors";
+import Note from "../model/noteModel";
+import { HTTP_STATUS } from "../constants";
+import { AppError } from "../errors";
 
-// regex patterns to validate title and content
+// regex patterns to validate title, content, and category
 
 const VALID_TITLE = /^[a-zA-Z0-9\s.,!?'-]{3,100}$/; // allows letters, numbers, spaces, and common punctuation, with length between 3 and 100
 
@@ -16,7 +16,7 @@ export const getAllNotes = async (
 ): Promise<void> => {
   try {
     const notes = await Note.find(); // retrieves all notes from the database
-    res.status(HTTP_STATUS.OK).json(notes); // sends the notes as a JSON response with HTTP 200 status
+    res.status(HTTP_STATUS.OK).json(notes);
   } catch (error) {
     res
       .status(HTTP_STATUS.SERVER_ERROR)
@@ -52,22 +52,11 @@ export const createNote = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { title, content } = req.body; // extracts title and content from the request body
-    if (!title || !content) {
-      throw new AppError(
-        "Title and content are required",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-    if (!VALID_TITLE.test(title)) {
-      throw new AppError(
-        "Title must be 3-100 characters and contain only letters, numbers and basic punctuation",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
+    const { title, content, category } = req.body; // extracts title, content, and category from the request body
+    const note = await Note.create({ title, content, category }); // creates a new note in the database
 
-    const note = await Note.create({ title, content }); // creates a new note in the database
-    res.status(HTTP_STATUS.CREATED).json(note); // sends the created note as a JSON response with HTTP 201 status
+    const populatedNote = await note.populate("category", "name"); // populates the category field with its name
+    res.status(HTTP_STATUS.CREATED).json(populatedNote); // sends the created note as a JSON response with HTTP 201 status
   } catch (error) {
     if (error instanceof AppError) {
       res.status(error.statusCode).json({ message: error.message });
@@ -107,35 +96,47 @@ export const updateNote = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { title, content } = req.body; // extracts title and content from the request body
-    if (!title || !content) {
-      throw new AppError(
-        "Title and content are required",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-    if (!VALID_TITLE.test(title)) {
-      throw new AppError(
-        "Title must be 3-100 characters and contain only letters, numbers and basic punctuation",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-    if (!VALID_CONTENT.test(content)) {
-      throw new AppError(
-        "Content must be 5-1000 characters long",
-        HTTP_STATUS.BAD_REQUEST,
-      );
-    }
-
+    const { title, content, category } = req.body; // extracts title, content, and category from the request body
     const note = await Note.findByIdAndUpdate(
       req.params.id,
-      { title, content },
+      { title, content, category },
       { new: true }, // returns the updated note
     );
     if (!note) {
       throw new AppError("Note not found", HTTP_STATUS.NOT_FOUND);
     }
-    res.status(HTTP_STATUS.OK).json(note);
+    res
+      .status(HTTP_STATUS.OK)
+      .json({ message: "Note updated successfully", data: note });
+  } catch (error) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ message: error.message });
+    } else {
+      res
+        .status(HTTP_STATUS.SERVER_ERROR)
+        .json({ message: "Something went wrong" });
+    }
+  }
+};
+
+// GET /api/notes/category/:categoryId - get notes by category
+export const getNotesByCategory = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const notes = await Note.find({ category: req.params.categoryId }).populate(
+      "category",
+      "name",
+    ); // retrieves notes that match the specified category ID and populates the category field with its name
+
+    if (!notes.length) {
+      throw new AppError(
+        "No notes found for this category",
+        HTTP_STATUS.NOT_FOUND,
+      );
+    }
+    res.status(HTTP_STATUS.OK).json(notes);
   } catch (error) {
     if (error instanceof AppError) {
       res.status(error.statusCode).json({ message: error.message });
