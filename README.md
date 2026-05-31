@@ -31,8 +31,6 @@ Extend note-taking API with categories and type-safety
 
 ## What I Added Beyond the Task
 
-## What I Added Beyond the Task
-
 | Feature                    | Why I Added It                                                                |
 | -------------------------- | ----------------------------------------------------------------------------- |
 | **Regex input validation** | Validates that title and content meet quality rules, not just that they exist |
