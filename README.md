@@ -6,6 +6,8 @@ A RESTful API for a note-taking application built with Node.js, Express, TypeScr
 
 ## The Task
 
+### Task 11
+
 Build a basic REST API for a note-taking application with the following requirements:
 
 - Set up a basic Express server with TypeScript configuration
@@ -15,13 +17,22 @@ Build a basic REST API for a note-taking application with the following requirem
 - Add basic error handling with typed custom error classes
 - Test the API with Postman
 
+### Task 12
+
+Extend note-taking API with categories and type-safety
+
+- Create a Category interface and add it to the Note interface
+- Add a category field to each note with proper type validation
+- Create new endpoints for getting notes by category
+- Add validation for the note format using a custom middleware with TypeScript generics
+- Create a typed logging middleware to track API requests
+
 ---
 
 ## What I Added Beyond the Task
 
-| Feature                    | Why I Added It                                                                |
-| -------------------------- | ----------------------------------------------------------------------------- |
-| **PUT endpoint**           | Completes full CRUD Application                                               |
+| Feature | Why I Added It |
+| -------------------------- | ----------------------------------------------------------------------------- | |
 | **Regex input validation** | Validates that title and content meet quality rules, not just that they exist |
 
 ---
@@ -88,17 +99,47 @@ Server running on port 3000
 
 ### Notes
 
-| Method | Endpoint         | Description               |
-| ------ | ---------------- | ------------------------- |
-| GET    | `/api/notes`     | Get all notes             |
-| GET    | `/api/notes/:id` | Get a specific note by ID |
-| POST   | `/api/notes`     | Create a new note         |
-| PUT    | `/api/notes/:id` | Update an existing note   |
-| DELETE | `/api/notes/:id` | Delete a note             |
+| Method | Endpoint                          | Description               |
+| ------ | --------------------------------- | ------------------------- |
+| GET    | `/api/notes`                      | Get all notes             |
+| GET    | `/api/notes/:id`                  | Get a specific note by ID |
+| GET    | `/api/notes/category/:categoryId` | Get notes by category     |
+| POST   | `/api/notes`                      | Create a new note         |
+| PUT    | `/api/notes/:id`                  | Update an existing note   |
+| DELETE | `/api/notes/:id`                  | Delete a note             |
+
+### Categories
+
+| Method | Endpoint          | Description           |
+| ------ | ----------------- | --------------------- |
+| GET    | `/api/categories` | Get all categories    |
+| POST   | `/api/categories` | Create a new category |
 
 ---
 
 ## Request & Response Examples
+
+### Create a Category
+
+**POST** `/api/categories`
+
+```json
+ // Request body
+ {
+  "name":"Personal",
+  "description":"Personal related notes"
+ }
+
+ // Response (201 Created)
+ {
+  "name":"Personal",
+  "description":"Personal related notes",
+  "_id":"6a1c27d1367679ca6d51722a",
+  "createdAt":"2026-05-31T12:21:37.877Z",
+  "updatedAt":"2026-05-31T12:21:37.877Z",
+  "__v":0
+ }
+```
 
 ### Create a Note
 
@@ -107,18 +148,22 @@ Server running on port 3000
 ```json
 // Request body
 {
-  "title": "This is my first note",
-  "content": "Hello World!"
+  "title": "Note-taking API",
+  "content": "Building a note-taking API",
+  "category": "6a1c27d1367679ca6d51722a"
 }
 
 // Response (201 Created)
 {
-    "_id":"6a1070f6e29af2184e06284f",
-    "title":"This is my first note",
-    "content":"Hello World!",
-    "createdAt":"2026-05-22T15:06:30.204Z",
-    "updatedAt":"2026-05-22T15:06:30.204Z",
-    "__v":0
+  "title":"Note-taking API",
+  "content":"Building a note-taking API",
+  "category":{
+    "_id":"6a1c27d1367679ca6d51722a",
+    "name":"Personal"},
+  "_id":"6a1c3097cf5bb7e79fe75454",
+  "createdAt":"2026-05-31T12:59:03.365Z",
+  "updatedAt":"2026-05-31T12:59:03.365Z",
+  "__v":0
 }
 ```
 
@@ -155,10 +200,12 @@ note-taking-api/
 
 ## Validation Rules (Regex)
 
-| Field   | Rule                                                     |
-| ------- | -------------------------------------------------------- |
-| Title   | 3–100 characters, letters/numbers/basic punctuation only |
-| Content | 5–1,000 characters, any characters allowed               |
+| Field                | Rule                                                     |
+| -------------------- | -------------------------------------------------------- |
+| Title                | 3–100 characters, letters/numbers/basic punctuation only |
+| Content              | 5–1,000 characters, any characters allowed               |
+| Category name        | 2-50 characters, required                                |
+| Category description | Minimum 5 characters, required                           |
 
 ---
 

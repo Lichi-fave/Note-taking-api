@@ -57,7 +57,7 @@ export const validateCategoryData = (data: {
   name: string;
   description: string;
 }): string | null => {
-  if (!data.name || data.description) {
+  if (!data.name || !data.description) {
     return "Name and description are required";
   }
   if (data.name.length < 2 || data.name.length > 50) {

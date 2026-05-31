@@ -54,7 +54,9 @@ export const createNote = async (
   try {
     const { title, content, category } = req.body; // extracts title, content, and category from the request body
     const note = await Note.create({ title, content, category }); // creates a new note in the database
-    res.status(HTTP_STATUS.CREATED).json(note); // sends the created note as a JSON response with HTTP 201 status
+
+    const populatedNote = await note.populate("category", "name"); // populates the category field with its name
+    res.status(HTTP_STATUS.CREATED).json(populatedNote); // sends the created note as a JSON response with HTTP 201 status
   } catch (error) {
     if (error instanceof AppError) {
       res.status(error.statusCode).json({ message: error.message });
@@ -125,7 +127,8 @@ export const getNotesByCategory = async (
   try {
     const notes = await Note.find({ category: req.params.categoryId }).populate(
       "category",
-    ); // populate replaces the ID with the actual category data
+      "name",
+    ); // retrieves notes that match the specified category ID and populates the category field with its name
 
     if (!notes.length) {
       throw new AppError(

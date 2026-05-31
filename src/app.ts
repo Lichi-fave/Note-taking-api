@@ -14,11 +14,14 @@ import {
   getAllCategories,
   createCategory,
 } from "./controller/categoryController";
-import { validateNoteData, validateCategoryData } from "./middleware/validate";
+import {
+  validateNoteData,
+  validateCategoryData,
+  validateNoteDataForNote,
+} from "./middleware/validate";
 import { logger } from "./middleware/logger";
 import { HTTP_STATUS } from "./constants";
 import { AppError } from "./errors";
-import mongoose from "mongoose";
 
 dotenv.config(); // reads .env file so process.env can access the variables
 
@@ -33,12 +36,16 @@ app.use(logger); // applies the logger middleware to all incoming requests
 
 // routes for handling categories
 app.get("/api/categories", getAllCategories);
-app.post("/api/categories", validateCategoryData, createCategory);
+app.post(
+  "/api/categories",
+  validateNoteData(validateCategoryData),
+  createCategory,
+);
 
 // routes for handling notes
 app.get("/api/notes", getAllNotes);
 app.get("/api/notes/:id", getNoteById);
-app.post("/api/notes", validateNoteData, createNote);
+app.post("/api/notes", validateNoteData(validateNoteDataForNote), createNote);
 app.delete("/api/notes/:id", deleteNote);
 app.get("/api/notes/category/:categoryId", getNotesByCategory); // new route to get notes by category
 app.put("/api/notes/:id", validateNoteData, updateNote); // applies the validateNoteData middleware to the PUT /api/notes/:id route
@@ -56,6 +63,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 // Connect to the database and start the server
+
 connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
