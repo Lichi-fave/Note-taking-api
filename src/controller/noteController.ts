@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import Note from "./NoteModels";
-import { HTTP_STATUS } from "./constants";
-import { AppError } from "./errors";
+import Note from "../model/NoteModels";
+import { HTTP_STATUS } from "../constants";
+import { AppError } from "../errors";
 
 // regex patterns to validate title and content
 
@@ -136,6 +136,34 @@ export const updateNote = async (
       throw new AppError("Note not found", HTTP_STATUS.NOT_FOUND);
     }
     res.status(HTTP_STATUS.OK).json(note);
+  } catch (error) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ message: error.message });
+    } else {
+      res
+        .status(HTTP_STATUS.SERVER_ERROR)
+        .json({ message: "Something went wrong" });
+    }
+  }
+};
+
+// GET /api/notes/category/:categoryId - get notes by category
+export const getNotesByCategory = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const notes = await Note.find({ category: req.params.categoryId }).populate(
+      "category",
+    ); // populate replaces the ID with the actual category data
+
+    if (!notes.length) {
+      throw new AppError(
+        "No notes found for this category",
+        HTTP_STATUS.NOT_FOUND,
+      );
+    }
+    res.status(HTTP_STATUS.OK).json(notes);
   } catch (error) {
     if (error instanceof AppError) {
       res.status(error.statusCode).json({ message: error.message });
