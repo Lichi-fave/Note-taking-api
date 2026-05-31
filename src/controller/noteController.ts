@@ -3,11 +3,13 @@ import Note from "../model/NoteModels";
 import { HTTP_STATUS } from "../constants";
 import { AppError } from "../errors";
 
-// regex patterns to validate title and content
+// regex patterns to validate title, content, and category
 
 const VALID_TITLE = /^[a-zA-Z0-9\s.,!?'-]{3,100}$/; // allows letters, numbers, spaces, and common punctuation, with length between 3 and 100
 
 const VALID_CONTENT = /^[\s\S]{5,1000}$/; // allows any characters including newlines, with length between 5 and 1000
+
+const VALID_CATEGORY = /^[0-9a-fA-F]{24}$/; // MongoDB ObjectId format
 
 // GET /api/notes - list all notes
 export const getAllNotes = async (
@@ -52,10 +54,11 @@ export const createNote = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { title, content } = req.body; // extracts title and content from the request body
-    if (!title || !content) {
+    const { title, content, category } = req.body; // extracts title, content, and category from the request body
+
+    if (!title || !content || !category) {
       throw new AppError(
-        "Title and content are required",
+        "Title, content, and category are required",
         HTTP_STATUS.BAD_REQUEST,
       );
     }
@@ -66,7 +69,7 @@ export const createNote = async (
       );
     }
 
-    const note = await Note.create({ title, content }); // creates a new note in the database
+    const note = await Note.create({ title, content, category }); // creates a new note in the database
     res.status(HTTP_STATUS.CREATED).json(note); // sends the created note as a JSON response with HTTP 201 status
   } catch (error) {
     if (error instanceof AppError) {
@@ -107,10 +110,10 @@ export const updateNote = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { title, content } = req.body; // extracts title and content from the request body
-    if (!title || !content) {
+    const { title, content, category } = req.body; // extracts title, content, and category from the request body
+    if (!title || !content || !category) {
       throw new AppError(
-        "Title and content are required",
+        "Title, content, and category are required",
         HTTP_STATUS.BAD_REQUEST,
       );
     }
@@ -126,10 +129,13 @@ export const updateNote = async (
         HTTP_STATUS.BAD_REQUEST,
       );
     }
+    if (!VALID_CATEGORY.test(category)) {
+      throw new AppError("Invalid category ID format", HTTP_STATUS.BAD_REQUEST);
+    }
 
     const note = await Note.findByIdAndUpdate(
       req.params.id,
-      { title, content },
+      { title, content, category },
       { new: true }, // returns the updated note
     );
     if (!note) {
