@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { ICategory } from "./CategoryModel";
+import { ICategory } from "./categoryModel";
 
 // this is the typescript interface that defines the structure of a Note document
 export interface INote extends Document {
