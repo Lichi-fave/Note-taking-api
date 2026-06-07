@@ -1,6 +1,7 @@
 # Note-Taking API
 
 A RESTful API for a note-taking application built with Node.js, Express, TypeScript, and MongoDB.
+**Live URL:**https://note-taking-api-03r0.onrender.com
 
 ---
 
@@ -64,6 +65,10 @@ A RESTful API for a note-taking application built with Node.js, Express, TypeScr
 ---
 
 ## Getting Started
+
+The API is live at: https://note-taking-api-03r0.onrender.com
+
+To run it locally, follow the steps below.
 
 ### Prerequisites
 
@@ -157,8 +162,6 @@ Authorization: Bearer <your_token>
 | ------ | ----------------- | --------------------- |
 | GET    | `/api/categories` | Get all categories    |
 | POST   | `/api/categories` | Create a new category |
-
----
 
 ---
 
