@@ -68,13 +68,7 @@ export const register = async (
       },
     });
   } catch (error) {
-    if (error instanceof AppError) {
-      res.status(error.statusCode).json({ message: error.message });
-    } else {
-      res
-        .status(HTTP_STATUS.SERVER_ERROR)
-        .json({ message: "An unexpected error occurred" });
-    }
+    next(error); // pass the error to the global error handler
   }
 };
 
@@ -98,13 +92,13 @@ export const login = async (
     // find the user by email
     const user = await User.findOne({ email });
     if (!user) {
-      throw new AppError("Invalid email or password", HTTP_STATUS.BAD_REQUEST);
+      throw new AppError("Invalid email or password", HTTP_STATUS.UNAUTHORIZED);
     }
 
     // compare password with hashed password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new AppError("Invalid email or password", HTTP_STATUS.BAD_REQUEST);
+      throw new AppError("Invalid email or password", HTTP_STATUS.UNAUTHORIZED);
     }
 
     // generate JWT token for the authenticated user
@@ -125,12 +119,6 @@ export const login = async (
       },
     });
   } catch (error) {
-    if (error instanceof AppError) {
-      res.status(error.statusCode).json({ message: error.message });
-    } else {
-      res
-        .status(HTTP_STATUS.SERVER_ERROR)
-        .json({ message: "An unexpected error occurred" });
-    }
+    next(error); // pass the error to the global error handler
   }
 };

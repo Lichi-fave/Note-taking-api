@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import Category from "../model/categoryModel";
 import { HTTP_STATUS } from "../constants";
 import { AppError } from "../errors";
@@ -7,14 +7,13 @@ import { AppError } from "../errors";
 export const getAllCategories = async (
   req: Request,
   res: Response,
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const categories = await Category.find({ user: req.user?.userId }); // retrieves all categories from the database
     res.status(HTTP_STATUS.OK).json(categories);
   } catch (error) {
-    res
-      .status(HTTP_STATUS.SERVER_ERROR)
-      .json({ message: "Something went wrong" });
+    next(error); // pass the error to the global error handler
   }
 };
 
@@ -22,9 +21,23 @@ export const getAllCategories = async (
 export const createCategory = async (
   req: Request,
   res: Response,
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { name, description } = req.body; // extracts name and description from the request body
+
+    // check for duplicate category name for the same user
+    const existingCategory = await Category.findOne({
+      name,
+      user: req.user?.userId,
+    });
+    if (existingCategory) {
+      throw new AppError(
+        "Category name already exists",
+        HTTP_STATUS.BAD_REQUEST,
+      );
+    }
+
     const category = await Category.create({
       name,
       description,
@@ -32,8 +45,6 @@ export const createCategory = async (
     }); // creates a new category in the database
     res.status(HTTP_STATUS.CREATED).json(category); // sends the created category as a JSON response with HTTP 201 status
   } catch (error) {
-    res
-      .status(HTTP_STATUS.SERVER_ERROR)
-      .json({ message: "Something went wrong" });
+    next(error); // pass the error to the global error handler
   }
 };

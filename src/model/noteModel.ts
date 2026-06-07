@@ -8,6 +8,7 @@ export interface INote extends Document {
   content: string;
   category: ICategory["_id"]; // reference to the category document
   user: IUser["_id"]; // reference to the user document
+  isArchived: boolean; // new field to indicate if the note is archived
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,9 +39,19 @@ const noteSchema = new Schema<INote>(
       ref: "User", // tells mongoose it links to the User model
       required: true,
     },
+    isArchived: {
+      type: Boolean,
+      default: false, // default to false, meaning the note is active by default
+    },
   },
   { timestamps: true }, // auto-manage createdAt and updatedAt fields
 );
+
+// Enable full-text search on title and content
+noteSchema.index({
+  title: "text",
+  content: "text",
+});
 
 const Note = mongoose.model<INote>("Note", noteSchema);
 

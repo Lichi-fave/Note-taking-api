@@ -16,9 +16,10 @@ declare global {
 // type guard to check if the payload is a valid IJwtPayload
 export const isJwtPayload = (payload: any): payload is IJwtPayload => {
   return (
-    payload &&
-    typeof payload.userId === "string" &&
-    typeof payload.email === "string"
+    typeof payload === "object" &&
+    payload !== null &&
+    typeof (payload as IJwtPayload).userId === "string" &&
+    typeof (payload as IJwtPayload).email === "string"
   );
 };
 
@@ -35,7 +36,7 @@ export const authenticate = async (
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       throw new AppError(
         "No token provided. Please login",
-        HTTP_STATUS.NOT_FOUND,
+        HTTP_STATUS.UNAUTHORIZED,
       );
     }
 
@@ -47,7 +48,7 @@ export const authenticate = async (
 
     // use type guard to ensure decoded is of type IJwtPayload
     if (!isJwtPayload(decoded)) {
-      throw new AppError("Invalid token payload", HTTP_STATUS.BAD_REQUEST);
+      throw new AppError("Invalid token payload", HTTP_STATUS.UNAUTHORIZED);
     }
 
     // attach user info to the request
@@ -57,11 +58,14 @@ export const authenticate = async (
     next();
   } catch (error) {
     if (error instanceof AppError) {
-      res.status(error.statusCode).json({ message: error.message });
+      next(error); // pass the error to the global error handler
     } else {
-      res
-        .status(HTTP_STATUS.BAD_REQUEST)
-        .json({ message: "Invalid or expired token. Please login again" });
+      next(
+        new AppError(
+          "An unexpected error occurred during authentication",
+          HTTP_STATUS.UNAUTHORIZED,
+        ),
+      );
     }
   }
 };

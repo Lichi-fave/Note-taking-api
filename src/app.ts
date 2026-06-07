@@ -1,7 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
 import connectDB from "./database";
 import {
   getAllNotes,
@@ -10,6 +9,8 @@ import {
   createNote,
   updateNote,
   deleteNote,
+  restoreNote,
+  getArchivedNotes,
 } from "./controller/noteController";
 import {
   getAllCategories,
@@ -52,9 +53,10 @@ app.post(
   createCategory,
 );
 
-// routes for handling notes - protected by authentication middleware
-app.get("/api/notes", authenticate, getAllNotes);
+// protected note routes
+app.get("/api/notes/archived", authenticate, getArchivedNotes);
 app.get("/api/notes/category/:categoryId", authenticate, getNotesByCategory);
+app.get("/api/notes", authenticate, getAllNotes);
 app.get("/api/notes/:id", authenticate, getNoteById);
 app.post(
   "/api/notes",
@@ -68,14 +70,16 @@ app.put(
   validateNoteData(validateNoteDataForNote),
   updateNote,
 );
+app.put("/api/notes/:id/restore", authenticate, restoreNote);
 app.delete("/api/notes/:id", authenticate, deleteNote);
 
 // Global error handler
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof AppError) {
     // If the error is an instance of AppError, send the specific status code and message
     return res.status(err.statusCode).json({ message: err.message });
   }
+  console.error("Unhandled error:", err); // Log the error for debugging purposes
   // For any other errors, send 500
   res
     .status(HTTP_STATUS.SERVER_ERROR)

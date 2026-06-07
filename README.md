@@ -4,11 +4,9 @@ A RESTful API for a note-taking application built with Node.js, Express, TypeScr
 
 ---
 
-## The Task
+## The Tasks
 
-### Task 11
-
-Build a basic REST API for a note-taking application with the following requirements:
+### Task 11 — Basic REST API
 
 - Set up a basic Express server with TypeScript configuration
 - Create proper interfaces for data models
@@ -17,9 +15,7 @@ Build a basic REST API for a note-taking application with the following requirem
 - Add basic error handling with typed custom error classes
 - Test the API with Postman
 
-### Task 12
-
-Extend note-taking API with categories and type-safety
+### Task 12 — Categories & Type Safety
 
 - Create a Category interface and add it to the Note interface
 - Add a category field to each note with proper type validation
@@ -27,13 +23,32 @@ Extend note-taking API with categories and type-safety
 - Add validation for the note format using a custom middleware with TypeScript generics
 - Create a typed logging middleware to track API requests
 
+### Task 13 — User Authentication
+
+- Create User and Auth interfaces for type safety
+- Add a user system with registration and login using typed controllers
+- Hash passwords using bcrypt during registration
+- Implement JWT authentication with typed payloads for protected routes
+- Associate notes with specific users using TypeScript type relationships
+- Modify existing endpoints to only show/modify notes belonging to the authenticated user
+- Add `POST /api/auth/register` and `POST /api/auth/login` endpoints
+- Create a custom type guard for user authentication
+
 ---
 
-## What I Added Beyond the Task
+## What I Added Beyond the Tasks
 
-| Feature                    | Why I Added It                                                                |
-| -------------------------- | ----------------------------------------------------------------------------- |
-| **Regex input validation** | Validates that title and content meet quality rules, not just that they exist |
+| Feature                         | Why I Added It                                                                                     |
+| ------------------------------- | -------------------------------------------------------------------------------------------------- |
+| **Full-text search**            | `?search=keyword` searches across note title and content using a MongoDB text index                |
+| **Pagination**                  | `?page=1&limit=10` on note listing so the API scales with large datasets                           |
+| **Sorting**                     | `?sort=-createdAt` supports any field, prefix with `-` for descending order                        |
+| **Category filtering**          | `?category=<id>` filters notes by category on the main listing endpoint                            |
+| **Soft delete / Archive**       | Notes are archived instead of permanently deleted, so data is never lost                           |
+| **Restore endpoint**            | Archived notes can be restored via `PUT /api/notes/:id/restore`                                    |
+| **Archived notes listing**      | `GET /api/notes/archived` lets users view and manage their archived notes                          |
+| **Duplicate category check**    | Prevents a user from creating two categories with the same name                                    |
+| **Security: vague login error** | Login returns the same error for wrong email or wrong password to avoid exposing registered emails |
 
 ---
 
@@ -43,6 +58,7 @@ Extend note-taking API with categories and type-safety
 - **Framework:** Express
 - **Language:** TypeScript
 - **Database:** MongoDB + Mongoose
+- **Auth:** JSON Web Tokens (JWT) + bcrypt
 - **Config:** dotenv
 
 ---
@@ -54,15 +70,15 @@ Extend note-taking API with categories and type-safety
 Make sure you have these installed:
 
 - [Node.js](https://nodejs.org)
-- [MongoDB](https://www.mongodb.com/try/download/community) (running locally)
+- [MongoDB](https://www.mongodb.com/try/download/community) (running locally or a MongoDB Atlas URI)
 
 ### Installation
 
 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/note-taking-api.git
-cd notes-api
+git clone https://github.com/Lichi-fave/Note-taking-api.git
+cd Note-taking-api
 ```
 
 2. Install dependencies
@@ -75,9 +91,11 @@ npm install
 
 Create a `.env` file in the root folder:
 
-```
+```env
 PORT=
 MONGODB_URI=
+JWT_SECRET=your_jwt_secret_here
+JWT_EXPIRES_IN=1h
 ```
 
 4. Run the development server
@@ -88,27 +106,52 @@ npm run dev
 
 You should see:
 
-```
+```text
 Connected to MongoDB
-Server running on port 3000
+Server is running on port 3000
 ```
 
 ---
 
 ## API Endpoints
 
-### Notes
+All `/api/notes` and `/api/categories` routes are **protected** — include your JWT token in the `Authorization` header:
 
-| Method | Endpoint                          | Description               |
-| ------ | --------------------------------- | ------------------------- |
-| GET    | `/api/notes`                      | Get all notes             |
-| GET    | `/api/notes/:id`                  | Get a specific note by ID |
-| GET    | `/api/notes/category/:categoryId` | Get notes by category     |
-| POST   | `/api/notes`                      | Create a new note         |
-| PUT    | `/api/notes/:id`                  | Update an existing note   |
-| DELETE | `/api/notes/:id`                  | Delete a note             |
+```http
+Authorization: Bearer <your_token>
+```
 
-### Categories
+### Auth (Public)
+
+| Method | Endpoint             | Description                   |
+| ------ | -------------------- | ----------------------------- |
+| POST   | `/api/auth/register` | Register a new user           |
+| POST   | `/api/auth/login`    | Login and receive a JWT token |
+
+### Notes (Protected)
+
+| Method | Endpoint                          | Description                                               |
+| ------ | --------------------------------- | --------------------------------------------------------- |
+| GET    | `/api/notes`                      | Get all notes (supports search, filter, sort, pagination) |
+| GET    | `/api/notes/archived`             | Get all archived notes                                    |
+| GET    | `/api/notes/category/:categoryId` | Get notes by category                                     |
+| GET    | `/api/notes/:id`                  | Get a specific note by ID                                 |
+| POST   | `/api/notes`                      | Create a new note                                         |
+| PUT    | `/api/notes/:id`                  | Update an existing note                                   |
+| PUT    | `/api/notes/:id/restore`          | Restore an archived note                                  |
+| DELETE | `/api/notes/:id`                  | Archive a note (soft delete)                              |
+
+### Query Parameters for `GET /api/notes`
+
+| Parameter  | Example            | Description                                  |
+| ---------- | ------------------ | -------------------------------------------- |
+| `search`   | `?search=meeting`  | Full-text search on title and content        |
+| `category` | `?category=<id>`   | Filter by category ID                        |
+| `sort`     | `?sort=-createdAt` | Sort by any field; prefix `-` for descending |
+| `page`     | `?page=2`          | Page number (default: 1)                     |
+| `limit`    | `?limit=10`        | Results per page (default: 10, max: 20)      |
+
+### Categories (Protected)
 
 | Method | Endpoint          | Description           |
 | ------ | ----------------- | --------------------- |
@@ -119,26 +162,82 @@ Server running on port 3000
 
 ## Request & Response Examples
 
+### Register
+
+**POST** `/api/auth/register`
+
+```json
+{
+  "firstName": "Oluchi",
+  "lastName": "Anakor",
+  "email": "oluchi@gmail.com",
+  "password": "securepassword"
+}
+```
+
+**Response (201 Created)**
+
+```json
+{
+  "message": "User registered successfully",
+  "token": "<jwt_token>",
+  "user": {
+    "id": "6a1c27d1367679ca6d51722a",
+    "firstName": "Oluchi",
+    "lastName": "Anakor",
+    "email": "oluchi@gmail.com"
+  }
+}
+```
+
+### Login
+
+**POST** `/api/auth/login`
+
+```json
+{
+  "email": "oluchi@gmail.com",
+  "password": "securepassword"
+}
+```
+
+**Response (200 OK)**
+
+```json
+{
+  "message": "Login successful",
+  "token": "<jwt_token>",
+  "user": {
+    "id": "6a1c27d1367679ca6d51722a",
+    "firstName": "Oluchi",
+    "lastName": "Anakor",
+    "email": "oluchi@gmail.com"
+  }
+}
+```
+
 ### Create a Category
 
 **POST** `/api/categories`
 
 ```json
- // Request body
- {
-  "name":"Personal",
-  "description":"Personal related notes"
- }
+{
+  "name": "Personal",
+  "description": "Personal related notes"
+}
+```
 
- // Response (201 Created)
- {
-  "name":"Personal",
-  "description":"Personal related notes",
-  "_id":"6a1c27d1367679ca6d51722a",
-  "createdAt":"2026-05-31T12:21:37.877Z",
-  "updatedAt":"2026-05-31T12:21:37.877Z",
-  "__v":0
- }
+**Response (201 Created)**
+
+```json
+{
+  "name": "Personal",
+  "description": "Personal related notes",
+  "_id": "6a1c27d1367679ca6d51722a",
+  "createdAt": "2026-05-31T12:21:37.877Z",
+  "updatedAt": "2026-05-31T12:21:37.877Z",
+  "__v": 0
+}
 ```
 
 ### Create a Note
@@ -146,24 +245,48 @@ Server running on port 3000
 **POST** `/api/notes`
 
 ```json
-// Request body
 {
   "title": "Note-taking API",
   "content": "Building a note-taking API",
   "category": "6a1c27d1367679ca6d51722a"
 }
+```
 
-// Response (201 Created)
+**Response (201 Created)**
+
+```json
 {
-  "title":"Note-taking API",
-  "content":"Building a note-taking API",
-  "category":{
-    "_id":"6a1c27d1367679ca6d51722a",
-    "name":"Personal"},
-  "_id":"6a1c3097cf5bb7e79fe75454",
-  "createdAt":"2026-05-31T12:59:03.365Z",
-  "updatedAt":"2026-05-31T12:59:03.365Z",
-  "__v":0
+  "title": "Note-taking API",
+  "content": "Building a note-taking API",
+  "category": {
+    "_id": "6a1c27d1367679ca6d51722a",
+    "name": "Personal"
+  },
+  "isArchived": false,
+  "_id": "6a1c3097cf5bb7e79fe75454",
+  "createdAt": "2026-05-31T12:59:03.365Z",
+  "updatedAt": "2026-05-31T12:59:03.365Z",
+  "__v": 0
+}
+```
+
+### Get Notes with Search & Pagination
+
+**GET** `/api/notes?search=API&sort=-createdAt&page=1&limit=5`
+
+**Response (200 OK)**
+
+```json
+{
+  "data": [ ...notes ],
+  "pagination": {
+    "total": 12,
+    "page": 1,
+    "limit": 5,
+    "totalPages": 3,
+    "hasNextPage": true,
+    "hasPrevPage": false
+  }
 }
 ```
 
@@ -171,26 +294,28 @@ Server running on port 3000
 
 ## Project Structure
 
-```
-note-taking-api/
+```text
+Note-taking-api/
 ├── src/
-│   ├──── controller/
-│   │  ├──── categoryController.ts
-│   │  └──── noteController.ts
-│   ├──── middleware/
-│   │  ├──── logger.ts
-│   │  └──── validate.ts
-│   ├──── model/
-│   │  ├──── categoryModel.ts
-│   │  └──── noteModel.ts
-│   ├──── app.ts
-│   ├──── constants.ts
-│   ├──── database.ts
-│   ├──── errors.ts
+│   ├── controller/
+│   │   ├── authController.ts
+│   │   ├── categoryController.ts
+│   │   └── noteController.ts
+│   ├── middleware/
+│   │   ├── auth.ts
+│   │   ├── logger.ts
+│   │   └── validate.ts
+│   ├── model/
+│   │   ├── categoryModel.ts
+│   │   ├── noteModel.ts
+│   │   └── userModel.ts
+│   ├── app.ts
+│   ├── constants.ts
+│   ├── database.ts
+│   └── errors.ts
 ├── .env
 ├── .env.example
-├── .gitignore            # Files excluded from GitHub
-├── package-lock.json
+├── .gitignore
 ├── package.json
 ├── README.md
 └── tsconfig.json
@@ -198,14 +323,16 @@ note-taking-api/
 
 ---
 
-## Validation Rules (Regex)
+## Validation Rules
 
-| Field                | Rule                                                     |
-| -------------------- | -------------------------------------------------------- |
-| Title                | 3–100 characters, letters/numbers/basic punctuation only |
-| Content              | 5–1,000 characters, any characters allowed               |
-| Category name        | 2-50 characters, required                                |
-| Category description | Minimum 5 characters, required                           |
+| Field                | Rule                                               |
+| -------------------- | -------------------------------------------------- |
+| Title                | 3–100 characters, required                         |
+| Content              | Minimum 5 characters, required                     |
+| Category name        | 2–50 characters, required, must be unique per user |
+| Category description | Minimum 5 characters, required                     |
+| Password             | Minimum 8 characters, required                     |
+| Email                | Valid email format, must be unique                 |
 
 ---
 
