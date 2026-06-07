@@ -9,7 +9,7 @@ export const getAllCategories = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const categories = await Category.find(); // retrieves all categories from the database
+    const categories = await Category.find({ user: req.user?.userId }); // retrieves all categories from the database
     res.status(HTTP_STATUS.OK).json(categories);
   } catch (error) {
     res
@@ -25,7 +25,11 @@ export const createCategory = async (
 ): Promise<void> => {
   try {
     const { name, description } = req.body; // extracts name and description from the request body
-    const category = await Category.create({ name, description }); // creates a new category in the database
+    const category = await Category.create({
+      name,
+      description,
+      user: req.user?.userId,
+    }); // creates a new category in the database
     res.status(HTTP_STATUS.CREATED).json(category); // sends the created category as a JSON response with HTTP 201 status
   } catch (error) {
     res

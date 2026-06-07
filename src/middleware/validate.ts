@@ -34,19 +34,12 @@ export const validateNoteDataForNote = (data: {
   content: string;
   category: string;
 }): string | null => {
-  const VALID_TITLE = /^[\w\s.,!?'"-]{3,100}$/; // allows letters, numbers, spaces and basic punctuation, 3-100 chars
-  const VALID_CONTENT = /^[\w\s.,!?'"-]{5,1000}$/; // allows letters, numbers, spaces and basic punctuation, 5-1000 chars
-
   if (!data.title || !data.content || !data.category) {
     return "Title, content, and category are required";
   }
 
-  if (!VALID_TITLE.test(data.title)) {
-    return "Title must be 3-100 characters and contain only letters, numbers and basic punctuation";
-  }
-
-  if (!VALID_CONTENT.test(data.content)) {
-    return "Content must be 5-1000 characters and contain only letters, numbers and basic punctuation";
+  if (data.title.length < 3 || data.title.length > 100) {
+    return "Title must be between 3 and 100 characters";
   }
 
   return null; // null means validation passed

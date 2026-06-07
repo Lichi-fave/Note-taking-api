@@ -1,27 +1,30 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 import connectDB from "./database";
 import {
   getAllNotes,
   getNoteById,
-  createNote,
-  deleteNote,
-  updateNote,
   getNotesByCategory,
+  createNote,
+  updateNote,
+  deleteNote,
 } from "./controller/noteController";
 import {
   getAllCategories,
   createCategory,
 } from "./controller/categoryController";
+import { register, login } from "./controller/authController";
 import {
   validateNoteData,
-  validateCategoryData,
   validateNoteDataForNote,
+  validateCategoryData,
 } from "./middleware/validate";
 import { logger } from "./middleware/logger";
-import { HTTP_STATUS } from "./constants";
+import { authenticate } from "./middleware/auth";
 import { AppError } from "./errors";
+import { HTTP_STATUS } from "./constants";
 
 dotenv.config(); // reads .env file so process.env can access the variables
 
@@ -30,25 +33,42 @@ const app = express(); // creates an Express application which will handle incom
 const PORT = process.env.PORT || 3000; // tells express "expect JSON data from requests"
 
 // Middleware to parse JSON bodies from incoming requests
-app.use(express.json());
 app.use(cors()); // enables CORS for all routes, allowing requests from any origin
+
+app.use(express.json());
+
 app.use(logger); // applies the logger middleware to all incoming requests
 
-// routes for handling categories
-app.get("/api/categories", getAllCategories);
+// Public routes for authentication
+app.post("/api/auth/register", register);
+app.post("/api/auth/login", login);
+
+// routes for handling categories- protected by authentication middleware
+app.get("/api/categories", authenticate, getAllCategories);
 app.post(
   "/api/categories",
-  validateNoteData(validateCategoryData),
+  authenticate,
+  validateNoteData(validateCategoryData), // middleware that runs before you create category
   createCategory,
 );
 
-// routes for handling notes
-app.get("/api/notes", getAllNotes);
-app.get("/api/notes/:id", getNoteById);
-app.post("/api/notes", validateNoteData(validateNoteDataForNote), createNote);
-app.delete("/api/notes/:id", deleteNote);
-app.get("/api/notes/category/:categoryId", getNotesByCategory); // new route to get notes by category
-app.put("/api/notes/:id", validateNoteData, updateNote); // applies the validateNoteData middleware to the PUT /api/notes/:id route
+// routes for handling notes - protected by authentication middleware
+app.get("/api/notes", authenticate, getAllNotes);
+app.get("/api/notes/category/:categoryId", authenticate, getNotesByCategory);
+app.get("/api/notes/:id", authenticate, getNoteById);
+app.post(
+  "/api/notes",
+  authenticate,
+  validateNoteData(validateNoteDataForNote),
+  createNote,
+);
+app.put(
+  "/api/notes/:id",
+  authenticate,
+  validateNoteData(validateNoteDataForNote),
+  updateNote,
+);
+app.delete("/api/notes/:id", authenticate, deleteNote);
 
 // Global error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

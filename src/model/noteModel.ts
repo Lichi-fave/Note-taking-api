@@ -1,11 +1,13 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { ICategory } from "./categoryModel";
+import { IUser } from "./userModel";
 
 // this is the typescript interface that defines the structure of a Note document
 export interface INote extends Document {
   title: string;
   content: string;
-  category: ICategory; // reference to the category document
+  category: ICategory["_id"]; // reference to the category document
+  user: IUser["_id"]; // reference to the user document
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +31,11 @@ const noteSchema = new Schema<INote>(
     category: {
       type: Schema.Types.ObjectId, // store the category as an ObjectId reference
       ref: "Category", // tells mongoose it links to the Category model
+      required: true,
+    },
+    user: {
+      type: Schema.Types.ObjectId, // store the user as an ObjectId reference
+      ref: "User", // tells mongoose it links to the User model
       required: true,
     },
   },

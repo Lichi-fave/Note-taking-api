@@ -1,9 +1,11 @@
 import mongoose, { Document, Schema } from "mongoose";
+import { IUser } from "./userModel";
 
 // this is the category interface
 export interface ICategory extends Document {
   name: string;
   description: string;
+  user: IUser["_id"]; // reference to the user document
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +23,11 @@ const categorySchema = new Schema<ICategory>(
       type: String,
       required: true,
       minlength: [5, "Category description must be at least 5 characters long"],
+    },
+    user: {
+      type: Schema.Types.ObjectId, // store the user as an ObjectId reference
+      ref: "User", // tells mongoose it links to the User model
+      required: true,
     },
   },
   { timestamps: true }, // auto-manage createdAt and updatedAt fields

@@ -3,19 +3,16 @@ import Note from "../model/noteModel";
 import { HTTP_STATUS } from "../constants";
 import { AppError } from "../errors";
 
-// regex patterns to validate title, content, and category
-
-const VALID_TITLE = /^[a-zA-Z0-9\s.,!?'-]{3,100}$/; // allows letters, numbers, spaces, and common punctuation, with length between 3 and 100
-
-const VALID_CONTENT = /^[\s\S]{5,1000}$/; // allows any characters including newlines, with length between 5 and 1000
-
 // GET /api/notes - list all notes
 export const getAllNotes = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const notes = await Note.find(); // retrieves all notes from the database
+    const notes = await Note.find({ user: req.user?.userId }).populate(
+      "category",
+      "name description", // only return the name and description of the category
+    ); // retrieves all notes from the database that belong to the authenticated user
     res.status(HTTP_STATUS.OK).json(notes);
   } catch (error) {
     res
@@ -30,11 +27,44 @@ export const getNoteById = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const note = await Note.findById(req.params.id); // retrieves a note by its ID from the database
+    const note = await Note.findOne({
+      _id: req.params.id,
+      user: req.user?.userId,
+    }); // retrieves a note by its ID from the database
     if (!note) {
       throw new AppError("Note not found", HTTP_STATUS.NOT_FOUND);
     }
     res.status(HTTP_STATUS.OK).json(note);
+  } catch (error) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ message: error.message });
+    } else {
+      res
+        .status(HTTP_STATUS.SERVER_ERROR)
+        .json({ message: "Something went wrong" });
+    }
+  }
+};
+
+// GET /api/notes/category/:categoryId - get notes by category
+export const getNotesByCategory = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    // only find notes that belong to the authenticated user and match the category ID
+    const notes = await Note.find({
+      category: req.params.categoryId,
+      user: req.user?.userId,
+    }).populate("category", "name description");
+
+    if (!notes.length) {
+      throw new AppError(
+        "No notes found for this category",
+        HTTP_STATUS.NOT_FOUND,
+      );
+    }
+    res.status(HTTP_STATUS.OK).json(notes);
   } catch (error) {
     if (error instanceof AppError) {
       res.status(error.statusCode).json({ message: error.message });
@@ -53,32 +83,14 @@ export const createNote = async (
 ): Promise<void> => {
   try {
     const { title, content, category } = req.body; // extracts title, content, and category from the request body
-    const note = await Note.create({ title, content, category }); // creates a new note in the database
+    const note = await Note.create({
+      title,
+      content,
+      category,
+      user: req.user?.userId,
+    }); // creates a new note in the database
 
-    const populatedNote = await note.populate("category", "name"); // populates the category field with its name
-    res.status(HTTP_STATUS.CREATED).json(populatedNote); // sends the created note as a JSON response with HTTP 201 status
-  } catch (error) {
-    if (error instanceof AppError) {
-      res.status(error.statusCode).json({ message: error.message });
-    } else {
-      res
-        .status(HTTP_STATUS.SERVER_ERROR)
-        .json({ message: "Something went wrong" });
-    }
-  }
-};
-
-// DELETE /api/notes/:id - delete a note
-export const deleteNote = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    const note = await Note.findByIdAndDelete(req.params.id); // deletes a note by its ID from the database
-    if (!note) {
-      throw new AppError("Note not found", HTTP_STATUS.NOT_FOUND);
-    }
-    res.status(HTTP_STATUS.OK).json({ message: "Note deleted successfully" });
+    res.status(HTTP_STATUS.CREATED).json(note); // sends the created note as a JSON response with HTTP 201 status
   } catch (error) {
     if (error instanceof AppError) {
       res.status(error.statusCode).json({ message: error.message });
@@ -96,11 +108,14 @@ export const updateNote = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { title, content, category } = req.body; // extracts title, content, and category from the request body
-    const note = await Note.findByIdAndUpdate(
-      req.params.id,
-      { title, content, category },
-      { new: true }, // returns the updated note
+    const { user, ...updateData } = req.body; // extracts title, content, and category from the request body
+    const note = await Note.findOneAndUpdate(
+      { _id: req.params.id, user: req.user?.userId },
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }, // returns the updated note
     );
     if (!note) {
       throw new AppError("Note not found", HTTP_STATUS.NOT_FOUND);
@@ -119,24 +134,20 @@ export const updateNote = async (
   }
 };
 
-// GET /api/notes/category/:categoryId - get notes by category
-export const getNotesByCategory = async (
+// DELETE /api/notes/:id - delete a note
+export const deleteNote = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const notes = await Note.find({ category: req.params.categoryId }).populate(
-      "category",
-      "name",
-    ); // retrieves notes that match the specified category ID and populates the category field with its name
-
-    if (!notes.length) {
-      throw new AppError(
-        "No notes found for this category",
-        HTTP_STATUS.NOT_FOUND,
-      );
+    const note = await Note.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user?.userId,
+    }); // find and check if the note belongs to the authenticated user before deleting
+    if (!note) {
+      throw new AppError("Note not found", HTTP_STATUS.NOT_FOUND);
     }
-    res.status(HTTP_STATUS.OK).json(notes);
+    res.status(HTTP_STATUS.OK).json({ message: "Note deleted successfully" });
   } catch (error) {
     if (error instanceof AppError) {
       res.status(error.statusCode).json({ message: error.message });
