@@ -33,6 +33,13 @@ export const register = async (
       );
     }
 
+    if (password.length < 8) {
+      throw new AppError(
+        "Password must be at least 8 characters long",
+        HTTP_STATUS.BAD_REQUEST,
+      );
+    }
+
     // check if user with the same email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
