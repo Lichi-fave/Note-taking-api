@@ -152,7 +152,7 @@ Authorization: Bearer <your_token>
 
 | Parameter  | Example            | Description                                  |
 | ---------- | ------------------ | -------------------------------------------- |
-| `search`   | `?search=meeting`  | Full-text search on title and content        |
+| `search`   | `?search=first`    | Full-text search on title and content        |
 | `category` | `?category=<id>`   | Filter by category ID                        |
 | `sort`     | `?sort=-createdAt` | Sort by any field; prefix `-` for descending |
 | `page`     | `?page=2`          | Page number (default: 1)                     |
