@@ -2,7 +2,14 @@
 
 A RESTful API for a note-taking application built with Node.js, Express, TypeScript, and MongoDB.
 
-**Live URL:**https://note-taking-api-03r0.onrender.com
+## Live API
+
+The API is live at: https://note-taking-api-03r0.onrender.com
+
+## API Documentation
+
+Full documentation with request/response examples:
+https://documenter.getpostman.com/view/39328624/2sBXwqrAY6.com
 
 ---
 
@@ -64,15 +71,6 @@ A RESTful API for a note-taking application built with Node.js, Express, TypeScr
 - **Config:** dotenv
 
 ---
-
-## Live API
-
-The API is live at: https://note-taking-api-03r0.onrender.com
-
-## API Documentation
-
-Full documentation with request/response examples:
-https://documenter.getpostman.com/view/39328624/2sBXwqrAY6
 
 ### Prerequisites
 
