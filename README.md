@@ -64,11 +64,14 @@ A RESTful API for a note-taking application built with Node.js, Express, TypeScr
 
 ---
 
-## Getting Started
+## Live API
 
 The API is live at: https://note-taking-api-03r0.onrender.com
 
-To run it locally, follow the steps below.
+## API Documentation
+
+Full documentation with request/response examples:
+https://documenter.getpostman.com/view/39328624/2sBXwqrAY6
 
 ### Prerequisites
 
