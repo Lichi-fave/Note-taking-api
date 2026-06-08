@@ -4,12 +4,12 @@ A RESTful API for a note-taking application built with Node.js, Express, TypeScr
 
 ## Live API
 
-The API is live at: https://note-taking-api-03r0.onrender.com
+[Live API](https://note-taking-api-03r0.onrender.com)
 
 ## API Documentation
 
 Full documentation with request/response examples:
-https://documenter.getpostman.com/view/39328624/2sBXwqrAY6.com
+(https://documenter.getpostman.com/view/39328624/2sBXwqrAY6)
 
 ---
 

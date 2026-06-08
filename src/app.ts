@@ -40,6 +40,15 @@ app.use(express.json());
 
 app.use(logger); // applies the logger middleware to all incoming requests
 
+// route for rendering the home page
+app.get("/", (req: Request, res: Response) => {
+  res.status(200).json({
+    message: "Welcome to the Note Taking API",
+    status: "Running",
+    documentation: "https://documenter.getpostman.com/view/39328624/2sBXwqrAY6",
+  });
+});
+
 // Public routes for authentication
 app.post("/api/auth/register", register);
 app.post("/api/auth/login", login);
