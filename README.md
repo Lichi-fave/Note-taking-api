@@ -9,7 +9,7 @@ A RESTful API for a note-taking application built with Node.js, Express, TypeScr
 ## API Documentation
 
 Full documentation with request/response examples:
-(https://documenter.getpostman.com/view/39328624/2sBXwqrAY6)
+https://documenter.getpostman.com/view/39328624/2sBXwqrAY6
 
 ---
 
